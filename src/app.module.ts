@@ -5,7 +5,7 @@ import { UsersModule } from './services/users/users.module';
 import { OrdersModule } from './services/orders/orders.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { MiddlewareConsumer } from '@nestjs/common';
-import typeorm from './database/typeorm';
+import typeorm from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
