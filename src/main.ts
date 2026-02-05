@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { LoggerCustomService } from './logger/logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
+  const app = await NestFactory.create(AppModule, {
+    logger: new LoggerCustomService(), // Provide an instance of your custom logger
+  });
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('System Core API')

@@ -9,4 +9,9 @@ export class UsersController {
   public async users(): Promise<any> {
     return this.usersService.users();
   }
+
+  @Get('orders')
+  public async orders(): Promise<any> {
+    return this.usersService.userOrders();
+  }
 }
