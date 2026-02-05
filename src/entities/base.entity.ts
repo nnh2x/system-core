@@ -22,6 +22,7 @@ export class BaseEntity {
     name: 'created_by',
     type: 'varchar',
     length: 10,
+    nullable: true,
   })
   createdBy: string;
 
@@ -29,6 +30,7 @@ export class BaseEntity {
     name: 'updated_by',
     type: 'varchar',
     length: 10,
+    nullable: true,
   })
   updatedBy: string;
 }
