@@ -55,6 +55,8 @@ export class AuthService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    console.log("2331");
+
     try {
       // Check if user already exists
       const existingUser = await this.usersRepository.findOne({
