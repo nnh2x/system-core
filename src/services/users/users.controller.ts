@@ -5,7 +5,7 @@ import { ApiBody, ApiOperation } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
   public async users(): Promise<any> {
@@ -20,7 +20,9 @@ export class UsersController {
   @Post('')
   @ApiOperation({ summary: 'Tạo user mới' })
   @ApiBody({ type: CreateUserDto })
-  public async createUser(@Body() userData: Partial<CreateUserDto>): Promise<string> {
+  public async createUser(
+    @Body() userData: Partial<CreateUserDto>,
+  ): Promise<string> {
     return this.usersService.createUser(userData);
   }
 }
