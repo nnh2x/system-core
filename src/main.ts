@@ -7,12 +7,27 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new LoggerCustomService(), // Provide an instance of your custom logger
   });
+
+  // Enable CORS for frontend
+  app.enableCors({
+    origin: ['http://localhost:3001', 'http://localhost:3000'],
+    credentials: true,
+  });
+
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('System Core API')
-    .setDescription('The System Core API description')
+    .setTitle('IAM & License Management System API')
+    .setDescription(
+      'Identity & Access Management + License/Entitlement Service',
+    )
     .setVersion('1.0')
-    .addTag('system-core')
+    .addTag('auth')
+    .addTag('users')
+    .addTag('rbac')
+    .addTag('organizations')
+    .addTag('license')
+    .addTag('entitlement')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

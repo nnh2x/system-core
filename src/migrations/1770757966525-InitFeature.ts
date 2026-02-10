@@ -1,156 +1,351 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class InitFeature1770757966525 implements MigrationInterface {
-    name = 'InitFeature1770757966525'
+  name = 'InitFeature1770757966525';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TYPE "public"."organizations_status_enum" AS ENUM('active', 'suspended', 'inactive', 'trial')`);
-        await queryRunner.query(`CREATE TABLE "organizations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "slug" character varying(100) NOT NULL, "email" character varying(255) NOT NULL, "phone" character varying(20), "logo" character varying(500), "website" character varying(255), "status" "public"."organizations_status_enum" NOT NULL DEFAULT 'trial', "trial_ends_at" TIMESTAMP, "settings" jsonb, "metadata" jsonb, CONSTRAINT "UQ_963693341bd612aa01ddf3a4b68" UNIQUE ("slug"), CONSTRAINT "PK_6b031fcd0863e3f6b44230163f9" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_organization_status" ON "organizations" ("status") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_organization_slug" ON "organizations" ("slug") `);
-        await queryRunner.query(`CREATE TABLE "permissions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "resource" character varying(100) NOT NULL, "action" character varying(50) NOT NULL, "description" text, "display_name" character varying(255) NOT NULL, CONSTRAINT "PK_920331560282b8bd21bb02290df" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_permission_resource_action" ON "permissions" ("resource", "action") `);
-        await queryRunner.query(`CREATE TABLE "role_permissions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "role_id" uuid NOT NULL, "permission_id" uuid NOT NULL, CONSTRAINT "PK_84059017c90bfcb701b8fa42297" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_role_permission_unique" ON "role_permissions" ("role_id", "permission_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."roles_type_enum" AS ENUM('system', 'organization')`);
-        await queryRunner.query(`CREATE TABLE "roles" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(100) NOT NULL, "display_name" character varying(255) NOT NULL, "description" text, "type" "public"."roles_type_enum" NOT NULL DEFAULT 'organization', "is_default" boolean NOT NULL DEFAULT false, "organization_id" uuid, CONSTRAINT "PK_c1433d71a4838793a49dcad46ab" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_role_type" ON "roles" ("type") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_role_org_name" ON "roles" ("organization_id", "name") `);
-        await queryRunner.query(`CREATE TABLE "user_roles" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "user_id" uuid NOT NULL, "role_id" uuid NOT NULL, "granted_by" uuid, "granted_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8acd5cf26ebd158416f477de799" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_user_role_unique" ON "user_roles" ("user_id", "role_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."system_core_users_status_enum" AS ENUM('active', 'inactive', 'suspended', 'pending')`);
-        await queryRunner.query(`CREATE TABLE "system_core_users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "email" character varying(255) NOT NULL, "password" character varying(255) NOT NULL, "user_name" character varying(255) NOT NULL, "last_name" character varying(255) NOT NULL, "full_name" character varying(255) NOT NULL, "code" character varying(100) NOT NULL, "phone" character varying(15), "avatar" character varying(500), "date_of_birth" TIMESTAMP, "organization_id" uuid NOT NULL, "status" "public"."system_core_users_status_enum" NOT NULL DEFAULT 'pending', "email_verified" boolean NOT NULL DEFAULT false, "email_verified_at" TIMESTAMP, "last_login_at" TIMESTAMP, "two_factor_enabled" boolean NOT NULL DEFAULT false, "two_factor_secret" character varying(255), CONSTRAINT "UQ_71e46bf52ad06c0cc904a74fb17" UNIQUE ("email"), CONSTRAINT "PK_429d52794e0cbd3b274172c700c" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_user_organization" ON "system_core_users" ("organization_id") `);
-        await queryRunner.query(`CREATE INDEX "idx_user_created_at" ON "system_core_users" ("created_at") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_user_code_phone" ON "system_core_users" ("code", "phone") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_user_email" ON "system_core_users" ("email") `);
-        await queryRunner.query(`CREATE TYPE "public"."subscription_plans_type_enum" AS ENUM('free', 'trial', 'basic', 'professional', 'enterprise', 'custom')`);
-        await queryRunner.query(`CREATE TYPE "public"."subscription_plans_billing_period_enum" AS ENUM('monthly', 'quarterly', 'yearly', 'lifetime')`);
-        await queryRunner.query(`CREATE TABLE "subscription_plans" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "slug" character varying(100) NOT NULL, "description" text, "type" "public"."subscription_plans_type_enum" NOT NULL DEFAULT 'free', "billing_period" "public"."subscription_plans_billing_period_enum" NOT NULL DEFAULT 'monthly', "price" numeric(10,2) NOT NULL DEFAULT '0', "currency" character varying(3) NOT NULL DEFAULT 'USD', "trial_days" integer NOT NULL DEFAULT '0', "max_users" integer, "max_projects" integer, "max_storage_gb" integer, "is_active" boolean NOT NULL DEFAULT true, "is_public" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "UQ_0ebf9b0f0cbd7b2fb5b62e3facb" UNIQUE ("slug"), CONSTRAINT "PK_9ab8fe6918451ab3d0a4fb6bb0c" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_plan_type" ON "subscription_plans" ("type") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_plan_slug" ON "subscription_plans" ("slug") `);
-        await queryRunner.query(`CREATE TABLE "plan_features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "plan_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "value" character varying(255), "is_enabled" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "PK_eb2b32d1d93a8b2e96e122e3a77" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_plan_feature_unique" ON "plan_features" ("plan_id", "feature_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."features_type_enum" AS ENUM('boolean', 'limit', 'quota', 'feature_flag')`);
-        await queryRunner.query(`CREATE TABLE "features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "code" character varying(100) NOT NULL, "name" character varying(255) NOT NULL, "description" text, "type" "public"."features_type_enum" NOT NULL DEFAULT 'boolean', "default_value" character varying(255), "unit" character varying(50), "is_active" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "UQ_c0e1f5d0ba8027c186705d752b8" UNIQUE ("code"), CONSTRAINT "PK_5c1e336df2f4a7051e5bf08a941" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_feature_code" ON "features" ("code") `);
-        await queryRunner.query(`CREATE TABLE "usage_tracking" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "user_id" uuid, "usage_count" bigint NOT NULL DEFAULT '0', "period_start" TIMESTAMP NOT NULL, "period_end" TIMESTAMP NOT NULL, "metadata" jsonb, CONSTRAINT "PK_2879a43395bb513204f88769aa6" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_usage_org_feature_period" ON "usage_tracking" ("organization_id", "feature_id", "period_start") `);
-        await queryRunner.query(`CREATE TYPE "public"."license_keys_status_enum" AS ENUM('active', 'suspended', 'revoked', 'expired')`);
-        await queryRunner.query(`CREATE TABLE "license_keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "license_key" character varying(255) NOT NULL, "organization_id" uuid NOT NULL, "subscription_id" uuid NOT NULL, "status" "public"."license_keys_status_enum" NOT NULL DEFAULT 'active', "issued_at" TIMESTAMP NOT NULL DEFAULT now(), "expires_at" TIMESTAMP, "last_validated_at" TIMESTAMP, "activation_count" integer NOT NULL DEFAULT '0', "max_activations" integer, "metadata" jsonb, CONSTRAINT "UQ_97662c0d4d5c336305ab14d2c5a" UNIQUE ("license_key"), CONSTRAINT "PK_b2711aaaf68d41a34461591519f" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_license_status" ON "license_keys" ("status") `);
-        await queryRunner.query(`CREATE INDEX "idx_license_org" ON "license_keys" ("organization_id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_license_key" ON "license_keys" ("license_key") `);
-        await queryRunner.query(`CREATE TYPE "public"."subscriptions_status_enum" AS ENUM('active', 'trialing', 'past_due', 'canceled', 'expired', 'suspended')`);
-        await queryRunner.query(`CREATE TABLE "subscriptions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "plan_id" uuid NOT NULL, "status" "public"."subscriptions_status_enum" NOT NULL DEFAULT 'trialing', "started_at" TIMESTAMP NOT NULL DEFAULT now(), "trial_ends_at" TIMESTAMP, "current_period_start" TIMESTAMP, "current_period_end" TIMESTAMP, "expires_at" TIMESTAMP, "canceled_at" TIMESTAMP, "auto_renew" boolean NOT NULL DEFAULT true, "payment_provider" character varying(50), "external_id" character varying(255), "metadata" jsonb, CONSTRAINT "PK_a87248d73155605cf782be9ee5e" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_subscription_expires" ON "subscriptions" ("expires_at") `);
-        await queryRunner.query(`CREATE INDEX "idx_subscription_status" ON "subscriptions" ("status") `);
-        await queryRunner.query(`CREATE INDEX "idx_subscription_org" ON "subscriptions" ("organization_id") `);
-        await queryRunner.query(`CREATE TABLE "sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "token" character varying(500) NOT NULL, "user_id" uuid NOT NULL, "ip_address" character varying(45), "user_agent" text, "device_info" jsonb, "expires_at" TIMESTAMP NOT NULL, "is_revoked" boolean NOT NULL DEFAULT false, "revoked_at" TIMESTAMP, CONSTRAINT "UQ_e9f62f5dcb8a54b84234c9e7a06" UNIQUE ("token"), CONSTRAINT "PK_3238ef96f18b355b671619111bc" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_session_expires" ON "sessions" ("expires_at") `);
-        await queryRunner.query(`CREATE INDEX "idx_session_user" ON "sessions" ("user_id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_session_token" ON "sessions" ("token") `);
-        await queryRunner.query(`CREATE TABLE "feature_entitlements" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "value" character varying(255), "is_enabled" boolean NOT NULL DEFAULT true, "expires_at" TIMESTAMP, "metadata" jsonb, CONSTRAINT "PK_ea32daf77845707fe5373739e5d" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_entitlement_org_feature" ON "feature_entitlements" ("organization_id", "feature_id") `);
-        await queryRunner.query(`CREATE TABLE "api_keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "key_hash" character varying(255) NOT NULL, "key_prefix" character varying(20) NOT NULL, "user_id" uuid NOT NULL, "organization_id" uuid NOT NULL, "scopes" jsonb, "expires_at" TIMESTAMP, "last_used_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "UQ_57384430aa1959f4578046c9b81" UNIQUE ("key_hash"), CONSTRAINT "PK_5c8a79801b44bd27b79228e1dad" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "idx_api_key_user" ON "api_keys" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "idx_api_key_org" ON "api_keys" ("organization_id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "idx_api_key_hash" ON "api_keys" ("key_hash") `);
-        await queryRunner.query(`ALTER TABLE "role_permissions" ADD CONSTRAINT "FK_178199805b901ccd220ab7740ec" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "role_permissions" ADD CONSTRAINT "FK_17022daf3f885f7d35423e9971e" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "roles" ADD CONSTRAINT "FK_c328a1ecd12a5f153a96df4509e" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_roles" ADD CONSTRAINT "FK_87b8888186ca9769c960e926870" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_roles" ADD CONSTRAINT "FK_b23c65e50a758245a33ee35fda1" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "system_core_users" ADD CONSTRAINT "FK_f5fbd33a9c5d3aefa6d470312a5" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "plan_features" ADD CONSTRAINT "FK_b51952483b18fa15334d714a838" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "plan_features" ADD CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_305652bcd7f73510eeb9404aadc" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_514f93a3ff6fe854f17dd1f5b03" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_97e15b4afbc1ebaad4f12080878" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "license_keys" ADD CONSTRAINT "FK_47596b30baef9506c12cace378b" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "license_keys" ADD CONSTRAINT "FK_254fb75b27bb2b9fdae2198d3e6" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_9ea1509175fa294fc64d43a9fe6" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_e45fca5d912c3a2fab512ac25dc" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "sessions" ADD CONSTRAINT "FK_085d540d9f418cfbdc7bd55bb19" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "feature_entitlements" ADD CONSTRAINT "FK_79f290cefcf4a4eea82f522527a" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "feature_entitlements" ADD CONSTRAINT "FK_e8b629ef64675bfab7988616626" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "api_keys" ADD CONSTRAINT "FK_a3baee01d8408cd3c0f89a9a973" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "api_keys" ADD CONSTRAINT "FK_a283bdef18876e525aefaec042f" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-    }
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `CREATE TYPE "public"."organizations_status_enum" AS ENUM('active', 'suspended', 'inactive', 'trial')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "organizations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "slug" character varying(100) NOT NULL, "email" character varying(255) NOT NULL, "phone" character varying(20), "logo" character varying(500), "website" character varying(255), "status" "public"."organizations_status_enum" NOT NULL DEFAULT 'trial', "trial_ends_at" TIMESTAMP, "settings" jsonb, "metadata" jsonb, CONSTRAINT "UQ_963693341bd612aa01ddf3a4b68" UNIQUE ("slug"), CONSTRAINT "PK_6b031fcd0863e3f6b44230163f9" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_organization_status" ON "organizations" ("status") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_organization_slug" ON "organizations" ("slug") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "permissions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "resource" character varying(100) NOT NULL, "action" character varying(50) NOT NULL, "description" text, "display_name" character varying(255) NOT NULL, CONSTRAINT "PK_920331560282b8bd21bb02290df" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_permission_resource_action" ON "permissions" ("resource", "action") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "role_permissions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "role_id" uuid NOT NULL, "permission_id" uuid NOT NULL, CONSTRAINT "PK_84059017c90bfcb701b8fa42297" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_role_permission_unique" ON "role_permissions" ("role_id", "permission_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."roles_type_enum" AS ENUM('system', 'organization')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "roles" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(100) NOT NULL, "display_name" character varying(255) NOT NULL, "description" text, "type" "public"."roles_type_enum" NOT NULL DEFAULT 'organization', "is_default" boolean NOT NULL DEFAULT false, "organization_id" uuid, CONSTRAINT "PK_c1433d71a4838793a49dcad46ab" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_role_type" ON "roles" ("type") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_role_org_name" ON "roles" ("organization_id", "name") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_roles" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "user_id" uuid NOT NULL, "role_id" uuid NOT NULL, "granted_by" uuid, "granted_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8acd5cf26ebd158416f477de799" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_user_role_unique" ON "user_roles" ("user_id", "role_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."system_core_users_status_enum" AS ENUM('active', 'inactive', 'suspended', 'pending')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "system_core_users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "email" character varying(255) NOT NULL, "password" character varying(255) NOT NULL, "user_name" character varying(255) NOT NULL, "last_name" character varying(255) NOT NULL, "full_name" character varying(255) NOT NULL, "code" character varying(100) NOT NULL, "phone" character varying(15), "avatar" character varying(500), "date_of_birth" TIMESTAMP, "organization_id" uuid NOT NULL, "status" "public"."system_core_users_status_enum" NOT NULL DEFAULT 'pending', "email_verified" boolean NOT NULL DEFAULT false, "email_verified_at" TIMESTAMP, "last_login_at" TIMESTAMP, "two_factor_enabled" boolean NOT NULL DEFAULT false, "two_factor_secret" character varying(255), CONSTRAINT "UQ_71e46bf52ad06c0cc904a74fb17" UNIQUE ("email"), CONSTRAINT "PK_429d52794e0cbd3b274172c700c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_user_organization" ON "system_core_users" ("organization_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_user_created_at" ON "system_core_users" ("created_at") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_user_code_phone" ON "system_core_users" ("code", "phone") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_user_email" ON "system_core_users" ("email") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."subscription_plans_type_enum" AS ENUM('free', 'trial', 'basic', 'professional', 'enterprise', 'custom')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."subscription_plans_billing_period_enum" AS ENUM('monthly', 'quarterly', 'yearly', 'lifetime')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "subscription_plans" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "slug" character varying(100) NOT NULL, "description" text, "type" "public"."subscription_plans_type_enum" NOT NULL DEFAULT 'free', "billing_period" "public"."subscription_plans_billing_period_enum" NOT NULL DEFAULT 'monthly', "price" numeric(10,2) NOT NULL DEFAULT '0', "currency" character varying(3) NOT NULL DEFAULT 'USD', "trial_days" integer NOT NULL DEFAULT '0', "max_users" integer, "max_projects" integer, "max_storage_gb" integer, "is_active" boolean NOT NULL DEFAULT true, "is_public" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "UQ_0ebf9b0f0cbd7b2fb5b62e3facb" UNIQUE ("slug"), CONSTRAINT "PK_9ab8fe6918451ab3d0a4fb6bb0c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_plan_type" ON "subscription_plans" ("type") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_plan_slug" ON "subscription_plans" ("slug") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "plan_features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "plan_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "value" character varying(255), "is_enabled" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "PK_eb2b32d1d93a8b2e96e122e3a77" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_plan_feature_unique" ON "plan_features" ("plan_id", "feature_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."features_type_enum" AS ENUM('boolean', 'limit', 'quota', 'feature_flag')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "code" character varying(100) NOT NULL, "name" character varying(255) NOT NULL, "description" text, "type" "public"."features_type_enum" NOT NULL DEFAULT 'boolean', "default_value" character varying(255), "unit" character varying(50), "is_active" boolean NOT NULL DEFAULT true, "metadata" jsonb, CONSTRAINT "UQ_c0e1f5d0ba8027c186705d752b8" UNIQUE ("code"), CONSTRAINT "PK_5c1e336df2f4a7051e5bf08a941" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_feature_code" ON "features" ("code") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "usage_tracking" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "user_id" uuid, "usage_count" bigint NOT NULL DEFAULT '0', "period_start" TIMESTAMP NOT NULL, "period_end" TIMESTAMP NOT NULL, "metadata" jsonb, CONSTRAINT "PK_2879a43395bb513204f88769aa6" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_usage_org_feature_period" ON "usage_tracking" ("organization_id", "feature_id", "period_start") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."license_keys_status_enum" AS ENUM('active', 'suspended', 'revoked', 'expired')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "license_keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "license_key" character varying(255) NOT NULL, "organization_id" uuid NOT NULL, "subscription_id" uuid NOT NULL, "status" "public"."license_keys_status_enum" NOT NULL DEFAULT 'active', "issued_at" TIMESTAMP NOT NULL DEFAULT now(), "expires_at" TIMESTAMP, "last_validated_at" TIMESTAMP, "activation_count" integer NOT NULL DEFAULT '0', "max_activations" integer, "metadata" jsonb, CONSTRAINT "UQ_97662c0d4d5c336305ab14d2c5a" UNIQUE ("license_key"), CONSTRAINT "PK_b2711aaaf68d41a34461591519f" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_license_status" ON "license_keys" ("status") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_license_org" ON "license_keys" ("organization_id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_license_key" ON "license_keys" ("license_key") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."subscriptions_status_enum" AS ENUM('active', 'trialing', 'past_due', 'canceled', 'expired', 'suspended')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "subscriptions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "plan_id" uuid NOT NULL, "status" "public"."subscriptions_status_enum" NOT NULL DEFAULT 'trialing', "started_at" TIMESTAMP NOT NULL DEFAULT now(), "trial_ends_at" TIMESTAMP, "current_period_start" TIMESTAMP, "current_period_end" TIMESTAMP, "expires_at" TIMESTAMP, "canceled_at" TIMESTAMP, "auto_renew" boolean NOT NULL DEFAULT true, "payment_provider" character varying(50), "external_id" character varying(255), "metadata" jsonb, CONSTRAINT "PK_a87248d73155605cf782be9ee5e" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_subscription_expires" ON "subscriptions" ("expires_at") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_subscription_status" ON "subscriptions" ("status") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_subscription_org" ON "subscriptions" ("organization_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "token" character varying(500) NOT NULL, "user_id" uuid NOT NULL, "ip_address" character varying(45), "user_agent" text, "device_info" jsonb, "expires_at" TIMESTAMP NOT NULL, "is_revoked" boolean NOT NULL DEFAULT false, "revoked_at" TIMESTAMP, CONSTRAINT "UQ_e9f62f5dcb8a54b84234c9e7a06" UNIQUE ("token"), CONSTRAINT "PK_3238ef96f18b355b671619111bc" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_session_expires" ON "sessions" ("expires_at") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_session_user" ON "sessions" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_session_token" ON "sessions" ("token") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "feature_entitlements" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "organization_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "value" character varying(255), "is_enabled" boolean NOT NULL DEFAULT true, "expires_at" TIMESTAMP, "metadata" jsonb, CONSTRAINT "PK_ea32daf77845707fe5373739e5d" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_entitlement_org_feature" ON "feature_entitlements" ("organization_id", "feature_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "api_keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" character varying(10), "updated_by" character varying(10), "name" character varying(255) NOT NULL, "key_hash" character varying(255) NOT NULL, "key_prefix" character varying(20) NOT NULL, "user_id" uuid NOT NULL, "organization_id" uuid NOT NULL, "scopes" jsonb, "expires_at" TIMESTAMP, "last_used_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "UQ_57384430aa1959f4578046c9b81" UNIQUE ("key_hash"), CONSTRAINT "PK_5c8a79801b44bd27b79228e1dad" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_api_key_user" ON "api_keys" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_api_key_org" ON "api_keys" ("organization_id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_api_key_hash" ON "api_keys" ("key_hash") `,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "role_permissions" ADD CONSTRAINT "FK_178199805b901ccd220ab7740ec" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "role_permissions" ADD CONSTRAINT "FK_17022daf3f885f7d35423e9971e" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ADD CONSTRAINT "FK_c328a1ecd12a5f153a96df4509e" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_roles" ADD CONSTRAINT "FK_87b8888186ca9769c960e926870" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_roles" ADD CONSTRAINT "FK_b23c65e50a758245a33ee35fda1" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system_core_users" ADD CONSTRAINT "FK_f5fbd33a9c5d3aefa6d470312a5" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_features" ADD CONSTRAINT "FK_b51952483b18fa15334d714a838" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_features" ADD CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_305652bcd7f73510eeb9404aadc" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_514f93a3ff6fe854f17dd1f5b03" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" ADD CONSTRAINT "FK_97e15b4afbc1ebaad4f12080878" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "license_keys" ADD CONSTRAINT "FK_47596b30baef9506c12cace378b" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "license_keys" ADD CONSTRAINT "FK_254fb75b27bb2b9fdae2198d3e6" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_9ea1509175fa294fc64d43a9fe6" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_e45fca5d912c3a2fab512ac25dc" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "sessions" ADD CONSTRAINT "FK_085d540d9f418cfbdc7bd55bb19" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "feature_entitlements" ADD CONSTRAINT "FK_79f290cefcf4a4eea82f522527a" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "feature_entitlements" ADD CONSTRAINT "FK_e8b629ef64675bfab7988616626" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "api_keys" ADD CONSTRAINT "FK_a3baee01d8408cd3c0f89a9a973" FOREIGN KEY ("user_id") REFERENCES "system_core_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "api_keys" ADD CONSTRAINT "FK_a283bdef18876e525aefaec042f" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "api_keys" DROP CONSTRAINT "FK_a283bdef18876e525aefaec042f"`);
-        await queryRunner.query(`ALTER TABLE "api_keys" DROP CONSTRAINT "FK_a3baee01d8408cd3c0f89a9a973"`);
-        await queryRunner.query(`ALTER TABLE "feature_entitlements" DROP CONSTRAINT "FK_e8b629ef64675bfab7988616626"`);
-        await queryRunner.query(`ALTER TABLE "feature_entitlements" DROP CONSTRAINT "FK_79f290cefcf4a4eea82f522527a"`);
-        await queryRunner.query(`ALTER TABLE "sessions" DROP CONSTRAINT "FK_085d540d9f418cfbdc7bd55bb19"`);
-        await queryRunner.query(`ALTER TABLE "subscriptions" DROP CONSTRAINT "FK_e45fca5d912c3a2fab512ac25dc"`);
-        await queryRunner.query(`ALTER TABLE "subscriptions" DROP CONSTRAINT "FK_9ea1509175fa294fc64d43a9fe6"`);
-        await queryRunner.query(`ALTER TABLE "license_keys" DROP CONSTRAINT "FK_254fb75b27bb2b9fdae2198d3e6"`);
-        await queryRunner.query(`ALTER TABLE "license_keys" DROP CONSTRAINT "FK_47596b30baef9506c12cace378b"`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_97e15b4afbc1ebaad4f12080878"`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_514f93a3ff6fe854f17dd1f5b03"`);
-        await queryRunner.query(`ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_305652bcd7f73510eeb9404aadc"`);
-        await queryRunner.query(`ALTER TABLE "plan_features" DROP CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57"`);
-        await queryRunner.query(`ALTER TABLE "plan_features" DROP CONSTRAINT "FK_b51952483b18fa15334d714a838"`);
-        await queryRunner.query(`ALTER TABLE "system_core_users" DROP CONSTRAINT "FK_f5fbd33a9c5d3aefa6d470312a5"`);
-        await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_b23c65e50a758245a33ee35fda1"`);
-        await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_87b8888186ca9769c960e926870"`);
-        await queryRunner.query(`ALTER TABLE "roles" DROP CONSTRAINT "FK_c328a1ecd12a5f153a96df4509e"`);
-        await queryRunner.query(`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_17022daf3f885f7d35423e9971e"`);
-        await queryRunner.query(`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_178199805b901ccd220ab7740ec"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_api_key_hash"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_api_key_org"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_api_key_user"`);
-        await queryRunner.query(`DROP TABLE "api_keys"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_entitlement_org_feature"`);
-        await queryRunner.query(`DROP TABLE "feature_entitlements"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_session_token"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_session_user"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_session_expires"`);
-        await queryRunner.query(`DROP TABLE "sessions"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_subscription_org"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_subscription_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_subscription_expires"`);
-        await queryRunner.query(`DROP TABLE "subscriptions"`);
-        await queryRunner.query(`DROP TYPE "public"."subscriptions_status_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_license_key"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_license_org"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_license_status"`);
-        await queryRunner.query(`DROP TABLE "license_keys"`);
-        await queryRunner.query(`DROP TYPE "public"."license_keys_status_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_usage_org_feature_period"`);
-        await queryRunner.query(`DROP TABLE "usage_tracking"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_feature_code"`);
-        await queryRunner.query(`DROP TABLE "features"`);
-        await queryRunner.query(`DROP TYPE "public"."features_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_plan_feature_unique"`);
-        await queryRunner.query(`DROP TABLE "plan_features"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_plan_slug"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_plan_type"`);
-        await queryRunner.query(`DROP TABLE "subscription_plans"`);
-        await queryRunner.query(`DROP TYPE "public"."subscription_plans_billing_period_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."subscription_plans_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_code_phone"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_organization"`);
-        await queryRunner.query(`DROP TABLE "system_core_users"`);
-        await queryRunner.query(`DROP TYPE "public"."system_core_users_status_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_role_unique"`);
-        await queryRunner.query(`DROP TABLE "user_roles"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_role_org_name"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_role_type"`);
-        await queryRunner.query(`DROP TABLE "roles"`);
-        await queryRunner.query(`DROP TYPE "public"."roles_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_role_permission_unique"`);
-        await queryRunner.query(`DROP TABLE "role_permissions"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_permission_resource_action"`);
-        await queryRunner.query(`DROP TABLE "permissions"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_organization_slug"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_organization_status"`);
-        await queryRunner.query(`DROP TABLE "organizations"`);
-        await queryRunner.query(`DROP TYPE "public"."organizations_status_enum"`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "api_keys" DROP CONSTRAINT "FK_a283bdef18876e525aefaec042f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "api_keys" DROP CONSTRAINT "FK_a3baee01d8408cd3c0f89a9a973"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "feature_entitlements" DROP CONSTRAINT "FK_e8b629ef64675bfab7988616626"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "feature_entitlements" DROP CONSTRAINT "FK_79f290cefcf4a4eea82f522527a"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "sessions" DROP CONSTRAINT "FK_085d540d9f418cfbdc7bd55bb19"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" DROP CONSTRAINT "FK_e45fca5d912c3a2fab512ac25dc"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" DROP CONSTRAINT "FK_9ea1509175fa294fc64d43a9fe6"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "license_keys" DROP CONSTRAINT "FK_254fb75b27bb2b9fdae2198d3e6"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "license_keys" DROP CONSTRAINT "FK_47596b30baef9506c12cace378b"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_97e15b4afbc1ebaad4f12080878"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_514f93a3ff6fe854f17dd1f5b03"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "usage_tracking" DROP CONSTRAINT "FK_305652bcd7f73510eeb9404aadc"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_features" DROP CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_features" DROP CONSTRAINT "FK_b51952483b18fa15334d714a838"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system_core_users" DROP CONSTRAINT "FK_f5fbd33a9c5d3aefa6d470312a5"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_roles" DROP CONSTRAINT "FK_b23c65e50a758245a33ee35fda1"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_roles" DROP CONSTRAINT "FK_87b8888186ca9769c960e926870"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" DROP CONSTRAINT "FK_c328a1ecd12a5f153a96df4509e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_17022daf3f885f7d35423e9971e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_178199805b901ccd220ab7740ec"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."idx_api_key_hash"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_api_key_org"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_api_key_user"`);
+    await queryRunner.query(`DROP TABLE "api_keys"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."idx_entitlement_org_feature"`,
+    );
+    await queryRunner.query(`DROP TABLE "feature_entitlements"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_session_token"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_session_user"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_session_expires"`);
+    await queryRunner.query(`DROP TABLE "sessions"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_subscription_org"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_subscription_status"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_subscription_expires"`);
+    await queryRunner.query(`DROP TABLE "subscriptions"`);
+    await queryRunner.query(`DROP TYPE "public"."subscriptions_status_enum"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_license_key"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_license_org"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_license_status"`);
+    await queryRunner.query(`DROP TABLE "license_keys"`);
+    await queryRunner.query(`DROP TYPE "public"."license_keys_status_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."idx_usage_org_feature_period"`,
+    );
+    await queryRunner.query(`DROP TABLE "usage_tracking"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_feature_code"`);
+    await queryRunner.query(`DROP TABLE "features"`);
+    await queryRunner.query(`DROP TYPE "public"."features_type_enum"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_plan_feature_unique"`);
+    await queryRunner.query(`DROP TABLE "plan_features"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_plan_slug"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_plan_type"`);
+    await queryRunner.query(`DROP TABLE "subscription_plans"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."subscription_plans_billing_period_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."subscription_plans_type_enum"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_user_code_phone"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_user_created_at"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_user_organization"`);
+    await queryRunner.query(`DROP TABLE "system_core_users"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."system_core_users_status_enum"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."idx_user_role_unique"`);
+    await queryRunner.query(`DROP TABLE "user_roles"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_role_org_name"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_role_type"`);
+    await queryRunner.query(`DROP TABLE "roles"`);
+    await queryRunner.query(`DROP TYPE "public"."roles_type_enum"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_role_permission_unique"`);
+    await queryRunner.query(`DROP TABLE "role_permissions"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."idx_permission_resource_action"`,
+    );
+    await queryRunner.query(`DROP TABLE "permissions"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_organization_slug"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_organization_status"`);
+    await queryRunner.query(`DROP TABLE "organizations"`);
+    await queryRunner.query(`DROP TYPE "public"."organizations_status_enum"`);
+  }
 }
