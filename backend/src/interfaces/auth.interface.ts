@@ -8,8 +8,8 @@ export interface JwtPayload {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
   user: {
     id: string;
     email: string;
