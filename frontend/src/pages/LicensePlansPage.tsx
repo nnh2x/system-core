@@ -95,7 +95,7 @@ const LicensePlansPage: React.FC = () => {
       title: 'Price',
       dataIndex: 'price',
       key: 'price',
-      render: (price: number) => `$${price.toFixed(2)}`,
+      render: (price: number) => `$${price}`,
     },
     {
       title: 'Billing Cycle',
@@ -108,12 +108,12 @@ const LicensePlansPage: React.FC = () => {
       key: 'maxUsers',
       render: (max: number) => (max === -1 ? 'Unlimited' : max),
     },
-    {
-      title: 'Max API Calls',
-      dataIndex: 'maxApiCalls',
-      key: 'maxApiCalls',
-      render: (max: number) => (max === -1 ? 'Unlimited' : max.toLocaleString()),
-    },
+    // {
+    //   title: 'Max API Calls',
+    //   dataIndex: 'maxApiCalls',
+    //   key: 'maxApiCalls',
+    //   render: (max: number) => (max === -1 ? 'Unlimited' : max.toLocaleString()),
+    // },
     {
       title: 'Status',
       dataIndex: 'isActive',

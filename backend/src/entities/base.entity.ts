@@ -21,7 +21,7 @@ export class BaseEntity {
   @Column({
     name: 'created_by',
     type: 'varchar',
-    length: 10,
+    length: 50,
     nullable: true,
   })
   createdBy: string;
@@ -29,7 +29,7 @@ export class BaseEntity {
   @Column({
     name: 'updated_by',
     type: 'varchar',
-    length: 10,
+    length: 50,
     nullable: true,
   })
   updatedBy: string;

@@ -34,7 +34,7 @@ export class LoggerMiddleware implements NestMiddleware {
         responseTime: `${responseTime}ms`,
         responseBody: responseBody,
       };
-      console.info('Response:\n' + JSON.stringify(infoLogger, null, 2));
+      // console.info('Response:\n' + JSON.stringify(infoLogger, null, 2));
     });
 
     next();
