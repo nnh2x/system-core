@@ -36,7 +36,7 @@ export class RbacService {
   async createRole(
     createRoleDto: CreateRoleDto,
     organizationId: string,
-    createdBy: string,  
+    createdBy: string,
   ) {
     const existing = await this.rolesRepository.findOne({
       where: {

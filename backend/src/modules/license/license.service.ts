@@ -76,22 +76,22 @@ export class LicenseService {
       isPublic !== undefined
         ? { isPublic, isActive: true }
         : { isActive: true };
-    const plans =  await this.plansRepository.find({
+    const plans = await this.plansRepository.find({
       where,
       relations: ['planFeatures', 'planFeatures.feature'],
     });
 
-    return plans.map(plan => {
+    return plans.map((plan) => {
       const { planFeatures, ...rest } = plan;
       return {
         ...rest,
-        features: planFeatures.map(pf => ({
+        features: planFeatures.map((pf) => ({
           id: pf.feature.id,
           name: pf.feature.name,
           code: pf.feature.code,
           description: pf.feature.description,
         })),
-      };  
+      };
     });
   }
 
