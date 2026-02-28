@@ -13,17 +13,17 @@ import {
   Switch,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { User } from '@/types';
+import { User, UserDetail } from '@/types';
 import { userService } from '@/services/user.service';
 import { rbacService } from '@/services/rbac.service';
 import type { ColumnsType } from 'antd/es/table';
 
 const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserDetail[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
   const [form] = Form.useForm();
 
   const fetchUsers = async () => {
@@ -58,13 +58,13 @@ const UsersPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: UserDetail) => {
     setEditingUser(user);
     form.setFieldsValue({
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      isActive: user.isActive,
+      isActive: user.status === 'active',
     });
     setDrawerVisible(true);
   };
@@ -95,7 +95,7 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<User> = [
+  const columns: ColumnsType<UserDetail> = [
     {
       title: 'Email',
       dataIndex: 'email',
@@ -112,12 +112,17 @@ const UsersPage: React.FC = () => {
       key: 'lastName',
     },
     {
+      title: 'Full Name',
+      dataIndex: 'fullName',
+      key: 'fullName',
+    },
+    {
       title: 'Status',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? 'Active' : 'Inactive'}
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={status === 'active' ? 'green' : 'red'}>
+          {status === 'active' ? 'Active' : 'Inactive'}
         </Tag>
       ),
     },
@@ -144,7 +149,7 @@ const UsersPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: User) => (
+      render: (_: any, record: UserDetail) => (
         <Space>
           <Button
             type="link"
@@ -182,6 +187,7 @@ const UsersPage: React.FC = () => {
         dataSource={users}
         rowKey="id"
         loading={loading}
+        showHeader={true}
         pagination={{ pageSize: 10 }}
       />
 
@@ -231,6 +237,21 @@ const UsersPage: React.FC = () => {
             rules={[{ required: true, message: 'Please input last name!' }]}
           >
             <Input placeholder="Doe" />
+          </Form.Item>
+
+          <Form.Item
+            name="fullName"
+            label="Full Name"
+            rules={[{ required: true, message: 'Please input full name!' }]}
+          >
+            <Input placeholder="John Doe" />
+          </Form.Item>
+          <Form.Item
+            name="code"
+            label="Code"
+            rules={[{ required: true, message: 'Please input code!' }]}
+          >
+            <Input placeholder="User Code" />
           </Form.Item>
 
           {!editingUser && (

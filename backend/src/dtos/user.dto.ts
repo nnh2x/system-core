@@ -28,6 +28,11 @@ export class CreateUserDto {
   phone?: string;
 
   @ApiProperty()
+  @IsString({ message: 'Email phải là chuỗi' })
+  @MaxLength(50, { message: 'Email không được vượt quá 50 ký tự' })
+  email?: string;
+
+  @ApiProperty()
   @IsString({ message: 'Ảnh đại diện phải là chuỗi' })
   @MaxLength(500, { message: 'Ảnh đại diện không được vượt quá 500 ký tự' })
   avatar?: string;
@@ -35,3 +40,5 @@ export class CreateUserDto {
   @ApiProperty()
   dateOfBirth?: string;
 }
+
+export class UserDto extends CreateUserDto {}

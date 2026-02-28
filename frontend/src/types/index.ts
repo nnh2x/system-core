@@ -11,16 +11,37 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+export interface UserDetail {
+  id: string
+  createdAt: string
+  updatedAt: string
+  email: string
+  firstName: string
+  lastName: string
+  fullName: string
+  status: string
+  organization: Organization
+}
 
 // Organization types
 export interface Organization {
   id: string;
   name: string;
   slug: string;
+  email: string;
+  phone?: any;
+  logo?: any;
+  website?: any;
   domain?: string;
-  isActive: boolean;
+  status?: string;
+  isActive?: boolean;
+  trialEndsAt?: string;
   subscriptionId?: string;
   subscription?: Subscription;
+  settings?: any;
+  metadata?: any;
+  createdBy?: any;
+  updatedBy?: any;
   createdAt: string;
   updatedAt: string;
 }

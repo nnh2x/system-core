@@ -4,7 +4,16 @@ export interface JwtPayload {
   organizationId: string;
   roles?: string[];
   iat?: number;
+  userId: string;
   exp?: number;
+}
+
+export interface UserProfile {
+  sub: string; // user id
+  email: string;
+  organizationId: string;
+  userId: string;
+  roles?: string[];
 }
 
 export interface LoginResponse {

@@ -1,15 +1,28 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from 'src/dtos/user.dto';
+import { CreateUserDto, UserDto } from 'src/dtos/user.dto';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { UserProfile } from 'src/interfaces/auth.interface';
+import { PaginationQueryDto, PaginationResponseDto } from 'src/dtos/pagination.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  public async users(): Promise<any> {
-    return this.usersService.users();
+  public async users(
+    @CurrentUser() currentUser: UserProfile,
+  ): Promise<UserDto[]> {
+    return this.usersService.users(currentUser);
+  }
+
+  @Get('paginated')
+  public async getUsersPaginated(
+    @CurrentUser() currentUser: UserProfile,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginationResponseDto<UserDto>> {
+    return this.usersService.getUsersPaginated(currentUser, query);
   }
 
   @Get('orders')
@@ -22,7 +35,8 @@ export class UsersController {
   @ApiBody({ type: CreateUserDto })
   public async createUser(
     @Body() userData: Partial<CreateUserDto>,
+    @CurrentUser() currentUser: any,
   ): Promise<string> {
-    return this.usersService.createUser(userData);
+    return this.usersService.createUser(userData, currentUser);
   }
 }
