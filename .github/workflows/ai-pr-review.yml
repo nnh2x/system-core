@@ -31,10 +31,11 @@ jobs:
           debug: false
           review_simple_changes: false
           review_comment_lgtm: false
-          openai_light_model: gpt-4o-mini   # dùng cho tóm tắt (rẻ hơn)
-          openai_heavy_model: gpt-4o        # dùng cho review chi tiết
-          openai_timeout: 900
-          language: vi                       # review bằng tiếng Việt
+          openai_base_url: https://openrouter.ai/api/v1
+          openai_light_model: openai/gpt-4o-mini   # dùng cho tóm tắt (rẻ hơn)
+          openai_heavy_model: openai/gpt-4o        # dùng cho review chi tiết
+          openai_timeout_ms: 900000
+          language: vi                              # review bằng tiếng Việt
           system_message: |
             Bạn là một senior software engineer đang review code cho một NestJS + React project.
             Hãy tập trung vào:
