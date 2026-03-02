@@ -211,4 +211,4 @@ docker pull huy9983123203/system-core-frontend:v1.0.0
 ```
 
 
-// trigger code
+// trigger code v2
