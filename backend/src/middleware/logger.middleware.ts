@@ -21,6 +21,8 @@ export class LoggerMiddleware implements NestMiddleware {
       return originalJson.call(this, body);
     };
 
+    console.log("Bắt đầu chạy req");
+
     // Log khi response được gửi đi
     res.on('finish', () => {
       const responseTime = Date.now() - startTime;
@@ -36,6 +38,9 @@ export class LoggerMiddleware implements NestMiddleware {
       };
       console.info('Response:\n' + JSON.stringify(infoLogger, null, 2));
     });
+
+    // Log khi request được nhận
+    console.log("Kết thúc req");
 
     next();
   }
