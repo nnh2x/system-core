@@ -1,0 +1,46 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}-${{ github.event_name == 'pull_request_review_comment' && 'pr_comment' || 'pr' }}
+  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed to get full diff
+
+      - name: AI Code Review
+        uses: coderabbitai/openai-pr-reviewer@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          debug: false
+          review_simple_changes: false
+          review_comment_lgtm: false
+          openai_light_model: gpt-4o-mini   # dùng cho tóm tắt (rẻ hơn)
+          openai_heavy_model: gpt-4o        # dùng cho review chi tiết
+          openai_timeout: 900
+          language: vi                       # review bằng tiếng Việt
+          system_message: |
+            Bạn là một senior software engineer đang review code cho một NestJS + React project.
+            Hãy tập trung vào:
+            - Lỗi logic và bug tiềm ẩn
+            - Vấn đề bảo mật (SQL injection, XSS, lộ credentials, ...)
+            - Performance
+            - Code style và best practices (NestJS, TypeScript, React)
+            - Thiếu error handling
+            Trả lời bằng tiếng Việt. Ngắn gọn, rõ ràng.
