@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-  Max,
-  IsEnum,
-} from 'class-validator';
+import { IsInt, IsOptional, IsString, Min, Max, IsEnum } from 'class-validator';
 
 export enum SortOrder {
   ASC = 'ASC',
@@ -64,7 +57,8 @@ export class PaginationQueryDto {
   searchValue?: string;
 
   @ApiPropertyOptional({
-    description: 'Filters động (JSON string). VD: {"email":"john@gmail.com","status":"active"}',
+    description:
+      'Filters động (JSON string). VD: {"email":"john@gmail.com","status":"active"}',
     example: '{"status":"active"}',
   })
   @IsString({ message: 'Filters phải là chuỗi JSON' })

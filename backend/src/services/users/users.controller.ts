@@ -4,7 +4,10 @@ import { CreateUserDto, UserDto } from 'src/dtos/user.dto';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { UserProfile } from 'src/interfaces/auth.interface';
-import { PaginationQueryDto, PaginationResponseDto } from 'src/dtos/pagination.dto';
+import {
+  PaginationQueryDto,
+  PaginationResponseDto,
+} from 'src/dtos/pagination.dto';
 
 @Controller('users')
 export class UsersController {

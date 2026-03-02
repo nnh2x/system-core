@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "dev": "yarn format && yarn start:dev",
+    "dev": "yarn format  && yarn start:dev",
     "dev:all": "concurrently \"npm run start:dev\" \"cd frontend && npm run dev\" --names \"🔷BACKEND,🟣FRONTEND\" --prefix-colors \"cyan,magenta\"",
     "frontend:install": "cd frontend && npm install",
     "frontend:build": "cd frontend && npm run build",

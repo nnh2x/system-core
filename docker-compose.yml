@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  # ─── Backend (NestJS) ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      target: development
+    container_name: system-core-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_HOST: ep-shiny-field-a1ie6idp-pooler.ap-southeast-1.aws.neon.tech
+      DATABASE_PORT: 5432
+      DATABASE_USER: neondb_owner
+      DATABASE_PASSWORD: npg_Af2IjeR5EvLu
+      DATABASE_NAME: neondb
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production-min-32-chars
+      PORT: 3000
+      NODE_ENV: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend:/app           # hot-reload source mount
+      - /app/node_modules        # preserve container node_modules
+
+  # ─── Frontend (React / Vite) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    container_name: system-core-frontend
+    restart: unless-stopped
+    environment:
+      # vite.config.ts reads this to proxy /api → backend container
+      BACKEND_URL: http://backend:3000
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./frontend:/app          # hot-reload source mount
+      - /app/node_modules        # preserve container node_modules
+    depends_on:
+      - backend

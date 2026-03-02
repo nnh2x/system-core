@@ -38,7 +38,7 @@ export class UsersService {
         'fullName',
         'createdAt',
         'updatedAt',
-        'status'
+        'status',
       ],
     });
     return users;

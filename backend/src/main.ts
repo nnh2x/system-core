@@ -8,9 +8,15 @@ async function bootstrap() {
     logger: new LoggerCustomService(), // Provide an instance of your custom logger
   });
 
-  // Enable CORS for frontend
+  // Enable CORS for frontend (includes Docker origins)
+  const allowedOrigins = [
+    'http://localhost:3001',
+    'http://localhost:3000',
+    'http://localhost:80',
+    'http://localhost',
+  ];
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
   });
 

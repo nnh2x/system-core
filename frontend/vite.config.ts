@@ -11,9 +11,11 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    host: true, // needed for Docker to expose outside the container
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        // In Docker dev mode, BACKEND_URL is set to http://backend:3000
+        target: process.env.BACKEND_URL || 'http://localhost:3000',
         changeOrigin: true,
       },
     },
