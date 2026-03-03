@@ -1,9 +1,9 @@
 import apiClient from './api';
-import { User, UserList } from '@/types';
+import { User, UserDetail } from '@/types';
 
 export const userService = {
-  async getAll(): Promise<UserList[]> {
-    const response = await apiClient.get<UserList[]>('/users');
+  async getAll(): Promise<UserDetail[]> {
+    const response = await apiClient.get<UserDetail[]>('/users');
     return response.data;
   },
 

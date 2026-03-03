@@ -5,33 +5,47 @@ import {
   Drawer,
   Form,
   Input,
-  Select,
   Space,
   Tag,
   Popconfirm,
   message,
   Switch,
+  Descriptions,
+  Badge,
+  Avatar,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { User, UserDetail } from '@/types';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import { UserDetail } from '@/types';
 import { userService } from '@/services/user.service';
 import { rbacService } from '@/services/rbac.service';
 import type { ColumnsType } from 'antd/es/table';
+import { usePopup } from '@/hooks/usePopup';
+import AppModal from '@/components/AppModal';
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<UserDetail[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
   const [form] = Form.useForm();
+
+  // ── Popups ──────────────────────────────────────────────────────────────
+  const formPopup = usePopup<UserDetail>(); // create / edit drawer
+  const detailPopup = usePopup<UserDetail>(); // view detail drawer
+
+  // ── Data fetching ────────────────────────────────────────────────────────
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const data = await userService.getAll();
       setUsers(data);
-    } catch (error: any) {
+    } catch {
       message.error('Failed to fetch users');
     } finally {
       setLoading(false);
@@ -42,7 +56,7 @@ const UsersPage: React.FC = () => {
     try {
       const data = await rbacService.getRoles();
       setRoles(data);
-    } catch (error) {
+    } catch {
       message.error('Failed to fetch roles');
     }
   };
@@ -52,21 +66,25 @@ const UsersPage: React.FC = () => {
     fetchRoles();
   }, []);
 
+  // ── Handlers ─────────────────────────────────────────────────────────────
+
   const handleCreate = () => {
-    setEditingUser(null);
     form.resetFields();
-    setDrawerVisible(true);
+    formPopup.openCreate();
   };
 
   const handleEdit = (user: UserDetail) => {
-    setEditingUser(user);
     form.setFieldsValue({
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       isActive: user.status === 'active',
     });
-    setDrawerVisible(true);
+    formPopup.openEdit(user);
+  };
+
+  const handleViewDetail = (user: UserDetail) => {
+    detailPopup.openView(user);
   };
 
   const handleDelete = async (id: string) => {
@@ -81,35 +99,27 @@ const UsersPage: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      if (editingUser) {
-        await userService.update(editingUser.id, values);
+      if (formPopup.isEditing && formPopup.currentData) {
+        await userService.update(formPopup.currentData.id, values);
         message.success('User updated successfully');
       } else {
         await userService.create(values);
         message.success('User created successfully');
       }
-      setDrawerVisible(false);
+      formPopup.close();
       fetchUsers();
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Failed to save user');
     }
   };
 
+  // ── Table columns ────────────────────────────────────────────────────────
+
   const columns: ColumnsType<UserDetail> = [
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-    },
-    {
-      title: 'First Name',
-      dataIndex: 'firstName',
-      key: 'firstName',
-    },
-    {
-      title: 'Last Name',
-      dataIndex: 'lastName',
-      key: 'lastName',
     },
     {
       title: 'Full Name',
@@ -153,6 +163,13 @@ const UsersPage: React.FC = () => {
         <Space>
           <Button
             type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+          >
+            View
+          </Button>
+          <Button
+            type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
@@ -173,6 +190,10 @@ const UsersPage: React.FC = () => {
     },
   ];
 
+  // ── Render ───────────────────────────────────────────────────────────────
+
+  const detailUser = detailPopup.currentData;
+
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
@@ -187,31 +208,89 @@ const UsersPage: React.FC = () => {
         dataSource={users}
         rowKey="id"
         loading={loading}
-        showHeader={true}
         pagination={{ pageSize: 10 }}
       />
 
+      {/* ── View Detail Modal ─────────────────────────────────────────── */}
+      <AppModal
+        popup={detailPopup}
+        title={
+          <Space>
+            <Avatar
+              icon={<UserOutlined />}
+              style={{ backgroundColor: '#1890ff' }}
+            />
+            <span>{detailUser?.fullName ?? 'User Detail'}</span>
+          </Space>
+        }
+        width={560}
+        footer={
+          <Space>
+            <Button onClick={detailPopup.close}>Close</Button>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => {
+                detailPopup.close();
+                if (detailUser) handleEdit(detailUser);
+              }}
+            >
+              Edit
+            </Button>
+          </Space>
+        }
+      >
+        {detailUser && (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="Email">
+              {detailUser.email}
+            </Descriptions.Item>
+            <Descriptions.Item label="First Name">
+              {detailUser.firstName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Last Name">
+              {detailUser.lastName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Full Name">
+              {detailUser.fullName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">
+              <Badge
+                status={detailUser.status === 'active' ? 'success' : 'error'}
+                text={detailUser.status === 'active' ? 'Active' : 'Inactive'}
+              />
+            </Descriptions.Item>
+            <Descriptions.Item label="Organization">
+              {detailUser.organization?.name ?? '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Created At">
+              {new Date(detailUser.createdAt).toLocaleString()}
+            </Descriptions.Item>
+            <Descriptions.Item label="Updated At">
+              {new Date(detailUser.updatedAt).toLocaleString()}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </AppModal>
+
+      {/* ── Create / Edit Form Drawer ─────────────────────────────────── */}
       <Drawer
-        title={editingUser ? 'Edit User' : 'Create User'}
+        title={formPopup.isEditing ? 'Edit User' : 'Create User'}
         width={480}
-        open={drawerVisible}
-        onClose={() => setDrawerVisible(false)}
+        open={formPopup.isOpen}
+        onClose={formPopup.close}
         footer={
           <div style={{ textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => setDrawerVisible(false)}>Cancel</Button>
+              <Button onClick={formPopup.close}>Cancel</Button>
               <Button type="primary" onClick={() => form.submit()}>
-                {editingUser ? 'Update' : 'Create'}
+                {formPopup.isEditing ? 'Update' : 'Create'}
               </Button>
             </Space>
           </div>
         }
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="email"
             label="Email"
@@ -239,22 +318,7 @@ const UsersPage: React.FC = () => {
             <Input placeholder="Doe" />
           </Form.Item>
 
-          <Form.Item
-            name="fullName"
-            label="Full Name"
-            rules={[{ required: true, message: 'Please input full name!' }]}
-          >
-            <Input placeholder="John Doe" />
-          </Form.Item>
-          <Form.Item
-            name="code"
-            label="Code"
-            rules={[{ required: true, message: 'Please input code!' }]}
-          >
-            <Input placeholder="User Code" />
-          </Form.Item>
-
-          {!editingUser && (
+          {!formPopup.isEditing && (
             <Form.Item
               name="password"
               label="Password"

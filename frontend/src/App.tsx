@@ -8,6 +8,7 @@ import DashboardPage from '@/pages/DashboardPage';
 import UsersPage from '@/pages/UsersPage';
 import RolesPage from '@/pages/RolesPage';
 import LicensePlansPage from '@/pages/LicensePlansPage';
+import EntitlementsPage from '@/pages/EntitlementsPage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -38,7 +39,7 @@ const AppRoutes: React.FC = () => {
         <Route path="licenses/plans" element={<LicensePlansPage />} />
         <Route path="licenses/subscriptions" element={<div>Subscriptions Page (Coming Soon)</div>} />
         <Route path="licenses/keys" element={<div>License Keys Page (Coming Soon)</div>} />
-        <Route path="entitlements" element={<div>Entitlements Page (Coming Soon)</div>} />
+        <Route path="entitlements" element={<EntitlementsPage />} />
         <Route path="organizations" element={<div>Organizations Page (Coming Soon)</div>} />
       </Route>
     </Routes>
